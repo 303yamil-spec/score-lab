@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1220">
+  <title>SportyBet ScoreLab</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="SportyBet ScoreLab dashboard">
+        <span class="brand-mark">S</span>
+        <span><strong>ScoreLab</strong><small>FOOTBALL ANALYTICS</small></span>
+      </a>
+      <nav class="navigation" aria-label="Main navigation">
+        <button class="nav-button active" data-view="dashboard"><span>◫</span>Dashboard</button>
+        <button class="nav-button" data-view="upcoming"><span>▤</span>Upcoming matches</button>
+        <button class="nav-button" data-view="analysis"><span>⌕</span>Match analysis</button>
+        <button class="nav-button" data-view="scores"><span>▦</span>All correct scores</button>
+        <button class="nav-button" data-view="rankings"><span>↟</span>Probability rankings</button>
+        <button class="nav-button" data-view="history"><span>◷</span>Historical predictions</button>
+        <button class="nav-button" data-view="accuracy"><span>⌁</span>Prediction accuracy</button>
+        <button class="nav-button" data-view="settings"><span>⚙</span>Settings</button>
+      </nav>
+      <div class="sidebar-foot">
+        <span class="live-dot"></span>
+        <span>Read-only match data</span>
+      </div>
+    </aside>
+
+    <div class="main-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">SPORTYBET DATA · CORRECT-SCORE MODEL</p>
+          <h1 id="pageTitle">Dashboard</h1>
+        </div>
+        <div class="top-actions">
+          <span id="connectionBadge" class="connection-badge"><span class="live-dot"></span>Connecting</span>
+          <button id="refreshButton" class="button button-primary" type="button"><span aria-hidden="true">↻</span> Refresh data</button>
+        </div>
+      </header>
+
+      <main>
+        <p id="globalMessage" class="global-message" role="status" hidden></p>
+
+        <section class="view active" id="view-dashboard" aria-labelledby="pageTitle">
+          <div class="hero-card">
+            <div>
+              <p class="eyebrow">DATA-LED, NOT GUARANTEED</p>
+              <h2>Every scoreline.<br><span>Probabilities, with context.</span></h2>
+              <p class="hero-copy">Live SportyBet fixtures and prices, with transparent Poisson estimates and an explicit overflow probability.</p>
+            </div>
+            <div class="hero-mark" aria-hidden="true">90<span>′</span></div>
+          </div>
+          <div class="metric-grid" id="dashboardMetrics"></div>
+          <div class="section-heading">
+            <div><p class="eyebrow">NEXT KICKOFFS</p><h2>Upcoming matches</h2></div>
+            <button class="text-button" data-go="upcoming">View all <span aria-hidden="true">→</span></button>
+          </div>
+          <div class="match-grid" id="dashboardMatches"></div>
+          <div class="panel">
+            <div class="section-heading compact"><div><p class="eyebrow">MODEL NOTE</p><h2>How to read these estimates</h2></div></div>
+            <p class="muted">Statistical estimates use pre-kickoff results from the configured football-data.org provider. If that source is unavailable, the dashboard clearly labels estimates inferred from current SportyBet 1X2 prices as low-confidence and market-implied. These are probabilities, not promises or betting advice.</p>
+          </div>
+        </section>
+
+        <section class="view" id="view-upcoming">
+          <div class="section-heading"><div><p class="eyebrow">LIVE SPORTYBET FIXTURES</p><h2>Upcoming matches</h2></div></div>
+          <label class="search-field"><span aria-hidden="true">⌕</span><input id="matchSearch" type="search" placeholder="Search teams or competition" autocomplete="off"></label>
+          <div class="match-grid" id="upcomingMatches"></div>
+        </section>
+
+        <section class="view" id="view-analysis">
+          <div class="section-heading"><div><p class="eyebrow">TEAM FORM &amp; MODEL EXPLANATION</p><h2>Match analysis</h2></div></div>
+          <label class="field-label" for="analysisMatchSelect">Choose a match</label>
+          <select class="select-control match-select" id="analysisMatchSelect"></select>
+          <div id="analysisContent"></div>
+        </section>
+
+        <section class="view" id="view-scores">
+          <div class="section-heading"><div><p class="eyebrow">COMPLETE SCORE GRID</p><h2>All correct scores</h2></div></div>
+          <div class="control-row">
+            <label class="field-group"><span>Match</span><select class="select-control match-select" id="scoreMatchSelect"></select></label>
+            <label class="field-group"><span>Goals per team</span><select class="select-control" id="goalRange"></select></label>
+            <label class="field-group"><span>Order</span><select class="select-control" id="scoreSort"><option value="high">Highest probability</option><option value="low">Lowest probability</option><option value="score">Scoreline order</option></select></label>
+            <label class="field-group"><span>Minimum probability</span><input class="select-control" id="minimumProbability" type="number" min="0" max="100" step="0.1" value="0"></label>
+          </div>
+          <label class="search-field"><span aria-hidden="true">⌕</span><input id="scoreSearch" type="search" placeholder="Find a scoreline, e.g. 1-0" autocomplete="off"></label>
+          <div id="scoreSummary"></div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Correct score</th><th>Model probability</th><th>SportyBet odds</th><th>Raw implied probability</th></tr></thead>
+              <tbody id="scoreRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="view" id="view-rankings">
+          <div class="section-heading"><div><p class="eyebrow">DYNAMICALLY RANKED</p><h2>Probability rankings</h2></div></div>
+          <label class="field-label" for="rankingMatchSelect">Choose a match</label>
+          <select class="select-control match-select" id="rankingMatchSelect"></select>
+          <div id="rankingContent"></div>
+        </section>
+
+        <section class="view" id="view-history">
+          <div class="section-heading"><div><p class="eyebrow">SAVED ESTIMATES · RESULTS WHEN AVAILABLE</p><h2>Prediction history</h2></div></div>
+          <div id="historyMetrics" class="metric-grid"></div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Match</th><th>Kickoff</th><th>Model top score</th><th>Result</th><th>Top-10 rank</th><th>Source</th></tr></thead>
+              <tbody id="historyRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="view" id="view-accuracy">
+          <div class="section-heading"><div><p class="eyebrow">MEASURED ONLY AFTER RESULTS</p><h2>Prediction accuracy</h2></div></div>
+          <p class="muted accuracy-warning">No historical accuracy is claimed until saved pre-match predictions have matching completed results.</p>
+          <div id="accuracyMetrics" class="metric-grid"></div>
+          <div class="panel">
+            <div class="section-heading compact"><div><p class="eyebrow">CALIBRATION</p><h2>Predicted probability vs observed outcomes</h2></div></div>
+            <div class="table-wrap">
+              <table class="data-table"><thead><tr><th>Probability band</th><th>Scoreline predictions</th><th>Average predicted</th><th>Observed rate</th></tr></thead><tbody id="calibrationRows"></tbody></table>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="section-heading compact"><div><p class="eyebrow">COMPETITION BREAKDOWN</p><h2>Accuracy by league</h2></div></div>
+            <div class="table-wrap">
+              <table class="data-table"><thead><tr><th>Competition</th><th>Matches</th><th>Top 1</th><th>Top 3</th><th>Top 5</th><th>Top 10</th></tr></thead><tbody id="leagueAccuracyRows"></tbody></table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="view-settings">
+          <div class="section-heading"><div><p class="eyebrow">DATA SOURCES &amp; MODEL</p><h2>Settings</h2></div></div>
+          <div id="settingsContent"></div>
+          <div class="panel">
+            <h2>Configure historical statistics</h2>
+            <p class="muted">SportyBet MCP provides fixtures, markets and odds, but not team history or final results. For those, create a football-data.org token and add it to the project’s local <code>.env</code> file as <code>FOOTBALL_DATA_API_KEY=your_token</code>, then restart the server. The key stays on the backend and is never sent to this page.</p>
+            <p class="muted">Without that token, any estimate is explicitly marked as low-confidence and market-implied from actual 1X2 prices. Unsupported or unavailable data is not fabricated.</p>
+          </div>
+          <div class="panel">
+            <h2>Responsible use</h2>
+            <p class="muted">Probabilities are model estimates, not guaranteed results or financial advice. This app does not place bets, access betting wallets, or create booking codes.</p>
+          </div>
+        </section>
+      </main>
+      <footer>SportyBet ScoreLab <span>·</span> Estimates only · No bet placement</footer>
+    </div>
+  </div>
+</body>
+</html>
